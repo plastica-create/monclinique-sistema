@@ -1,0 +1,108 @@
+# =====================================================================
+# Mon Clinique - .gitignore
+# Regra de ouro: NADA com dado de paciente entra no Git (LGPD art. 11).
+# Repositório precisa ser PRIVADO mesmo assim; este arquivo é a 2ª barreira.
+# =====================================================================
+
+# --- Backup do Gestão DS e qualquer cópia dele (dado pessoal sensível) ---
+Backup*
+backup*
+**/Backup*/
+**/backup*/
+Backup-GestaoDS*/
+*GestaoDS*.csv
+
+# --- Saída do ETL COM dado pessoal (pasta out/clean e CSVs) ---
+out/clean/
+out/clean/**
+*.csv
+*.tsv
+*.xlsx
+*.xls
+*.ods
+
+# --- Agregados SEM dado pessoal: ESTES ficam versionados ---
+# (out/dados.json e out/dados.js são gerados só com somas/contagens; out/qualidade.md também)
+!out/dados.json
+!out/dados.js
+!out/qualidade.md
+
+# --- Arquivos de paciente, exames, áudios (Plaud) e exportações ---
+/anexos/
+/exportacoes/
+/export/
+*.pdf
+*.docx
+*.doc
+*.mp3
+*.m4a
+*.wav
+*.mp4
+*.jpg
+*.jpeg
+*.png
+*.heic
+!public/**/*.png
+!public/**/*.jpg
+!public/**/*.jpeg
+!public/**/*.svg
+!docs/**/*.png
+
+# --- Compactados e dumps de banco ---
+*.zip
+*.7z
+*.rar
+*.tar
+*.tar.gz
+*.tgz
+*.gz
+*.dump
+*.backup
+*.bak
+*.sql.gz
+*.sqlite
+*.sqlite3
+pgdata/
+
+# --- Segredos e variáveis de ambiente (nunca versionar) ---
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+secrets/
+service-account*.json
+.vercel
+.supabase
+supabase/.temp/
+supabase/.branches/
+
+# --- Dependências e build ---
+node_modules/
+.next/
+dist/
+build/
+coverage/
+.turbo/
+*.tsbuildinfo
+npm-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# --- Python (ETL) ---
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+
+# --- Sistema / editor ---
+.DS_Store
+Thumbs.db
+desktop.ini
+.idea/
+.vscode/*
+!.vscode/extensions.json
+*.log

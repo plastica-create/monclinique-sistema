@@ -1,0 +1,381 @@
+<!--@@NAV-->
+    <button class="navitem active" data-tab="geral"><span class="navstatus real"></span>Visão Geral</button>
+
+    <div class="navgroup-label">Operação clínica</div>
+    <button class="navitem" data-tab="agenda"><span class="navstatus real"></span>Agenda</button>
+    <button class="navitem" data-tab="pacientes"><span class="navstatus real"></span>Pacientes</button>
+    <button class="navitem" data-tab="prontuario"><span class="navstatus proto"></span>Prontuário</button>
+
+    <div class="navgroup-label">Comercial &amp; Marketing</div>
+    <button class="navitem" data-tab="orc"><span class="navstatus real"></span>Orçamentos</button>
+    <button class="navitem" data-tab="crm"><span class="navstatus real"></span>CRM · Funil</button>
+    <button class="navitem" data-tab="mkt"><span class="navstatus stale"></span>Marketing</button>
+
+    <div class="navgroup-label">Financeiro</div>
+    <button class="navitem" data-tab="caixa"><span class="navstatus real"></span>Caixa &amp; recebíveis</button>
+    <button class="navitem" data-tab="fin"><span class="navstatus stale"></span>DRE (Conta Azul)</button>
+    <button class="navitem" data-tab="docs"><span class="navstatus proto"></span>Documentos</button>
+
+    <div class="navgroup-label">Gestão do projeto</div>
+    <button class="navitem" data-tab="div"><span class="navstatus block"></span>⚠ Divergência</button>
+    <button class="navitem" data-tab="qual"><span class="navstatus real"></span>Qualidade dos dados</button>
+    <button class="navitem" data-tab="migr"><span class="navstatus proto"></span>Sistema próprio</button>
+    <button class="navitem" data-tab="links"><span class="navstatus real"></span>Índice de links</button>
+    <button class="navitem" data-tab="road"><span class="navstatus proto"></span>Roadmap &amp; Escopo</button>
+
+<!--@@BANNER-->
+  <div class="topbanner">
+    <b>Protótipo v2 · dados reais do backup do Gestão DS (05/10/2026).</b> Agenda, Pacientes, Orçamentos e Caixa agora leem o backup de verdade — são uma foto de 05/10, não conexão ao vivo. <b>Nenhum nome, CPF ou telefone de paciente está neste arquivo</b>: só números agregados, então ele pode ser enviado. A versão com nomes é o <b>Painel-Operacional-LOCAL</b> (carrega os CSVs no seu navegador, sem publicar nada).
+  </div>
+
+<!--@@GERAL-->
+  <!-- ===================== VISÃO GERAL ===================== -->
+  <div class="pane" id="pane-geral">
+    <div class="pagehead">
+      <div>
+        <div class="eyebrow">Início · backup Gestão DS de 05/10/2026</div>
+        <div class="pagetitle">A clínica em oito números</div>
+        <div class="pagesub">Clique num cartão pra abrir o módulo. Tudo calculado do backup real, 2022–2026.</div>
+      </div>
+      <span class="statuschip real"><span class="sdot"></span>7 de 13 módulos com dado real</span>
+    </div>
+    <div class="setorgrid">
+      <div class="setorcard" onclick="goTab('agenda')">
+        <span class="stag tag-sistema">Agenda</span>
+        <h4>Atendimentos (90 dias)</h4>
+        <div class="sval" id="gAgVal">—</div>
+        <div class="slab" id="gAgLab">agendamentos nos últimos 90 dias</div>
+        <div class="minichart"><canvas id="geralAgChart"></canvas></div>
+        <div class="sfoot" id="gAgFoot"></div>
+      </div>
+      <div class="setorcard" onclick="goTab('pacientes')">
+        <span class="stag tag-sistema">Pacientes</span>
+        <h4>Base e recorrência</h4>
+        <div class="sval" id="gPacVal">—</div>
+        <div class="slab">pacientes cadastrados</div>
+        <div class="minichart"><canvas id="geralPacChart"></canvas></div>
+        <div class="sfoot" id="gPacFoot"></div>
+      </div>
+      <div class="setorcard" onclick="goTab('orc')">
+        <span class="stag tag-comercial">Orçamentos</span>
+        <h4>Vendas fechadas</h4>
+        <div class="sval" id="gOrcVal">—</div>
+        <div class="slab">em orçamentos ganhos (valor líquido)</div>
+        <div class="minichart"><canvas id="geralOrcChart"></canvas></div>
+        <div class="sfoot" id="gOrcFoot"></div>
+      </div>
+      <div class="setorcard" onclick="goTab('crm')">
+        <span class="stag tag-comercial">CRM</span>
+        <h4>Conversão e funil</h4>
+        <div class="sval">1.873</div>
+        <div class="slab">oportunidades no funil pré-vendas</div>
+        <div class="minichart"><canvas id="geralComercialChart"></canvas></div>
+        <div class="sfoot">Gargalo: 1.196 (64%) presas em "Atendimento"</div>
+      </div>
+      <div class="setorcard" onclick="goTab('caixa')">
+        <span class="stag tag-financeiro">Caixa</span>
+        <h4>Receita recebida</h4>
+        <div class="sval" id="geralReceita">—</div>
+        <div class="slab" id="gFinLab">recebido no Gestão DS</div>
+        <div class="minichart"><canvas id="geralFinChart"></canvas></div>
+        <div class="sfoot" id="gFinFoot"></div>
+      </div>
+      <div class="setorcard" onclick="goTab('caixa')">
+        <span class="stag tag-financeiro">A receber</span>
+        <h4>Atrasado na carteira</h4>
+        <div class="sval" id="gRecVal">—</div>
+        <div class="slab">receitas vencidas e não pagas</div>
+        <div class="minichart"><canvas id="geralRecChart"></canvas></div>
+        <div class="sfoot" id="gRecFoot"></div>
+      </div>
+      <div class="setorcard" onclick="goTab('prontuario')">
+        <span class="stag tag-clinico">Prontuário</span>
+        <h4>Histórico clínico migrável</h4>
+        <div class="sval" id="gPrVal">—</div>
+        <div class="slab">atendimentos registrados (2013–2026)</div>
+        <div class="minichart"><canvas id="geralProntChart"></canvas></div>
+        <div class="sfoot" id="gPrFoot"></div>
+      </div>
+      <div class="setorcard" onclick="goTab('mkt')">
+        <span class="stag tag-comercial">Marketing</span>
+        <h4>Aquisição e eficiência</h4>
+        <div class="sval">R$5,43</div>
+        <div class="slab">custo por conversa (Meta Ads)</div>
+        <div class="minichart"><canvas id="geralMktChart"></canvas></div>
+        <div class="sfoot" style="color:#7A5A1E;font-weight:600">Dado de 01–16/jul — acompanhamento parou depois disso</div>
+      </div>
+    </div>
+
+    <div class="sectionhead">
+      <div>
+        <div class="eyebrow">O que os dados mostram</div>
+        <div class="sectiontitle">Seis achados que mudam decisão</div>
+      </div>
+    </div>
+    <div class="cgrid" style="grid-template-columns:1fr 1fr 1fr;margin-bottom:8px" id="achados"></div>
+  </div>
+
+<!--@@PANES_CLINICO-->
+  <!-- ===================== AGENDA (real) ===================== -->
+  <div class="pane" id="pane-agenda" hidden>
+    <div class="pagehead">
+      <div>
+        <div class="eyebrow">Agendamento · módulo 02 do plano</div>
+        <div class="pagetitle">Agenda — o que o backup mostra</div>
+        <div class="pagesub">Fonte: Gestão DS · 3.478 agendamentos de out/2022 a out/2026 · médico único: Dr. Fabrício</div>
+      </div>
+      <span class="statuschip real"><span class="sdot"></span>Dado real · foto de 05/10/2026</span>
+    </div>
+    <div class="protobanner">
+      <b>Foto, não agenda ao vivo.</b> Estes números vêm do backup de 05/10/26. Agenda do dia (com nomes e telefones) está no <b>Painel-Operacional-LOCAL</b>; agenda ao vivo só existe quando o sistema próprio entrar no lugar do Gestão DS.
+    </div>
+    <div class="kgrid four" id="ag-kpi"></div>
+    <div class="cgrid">
+      <div class="panel"><h3>Atendimentos por mês</h3><div class="psub">Realizados, cancelados e sem baixa · clique numa barra</div><div class="canwrap" style="height:300px"><canvas id="agMesChart"></canvas></div></div>
+      <div class="panel"><h3>Mix por tipo</h3><div class="psub">Consulta, retorno, procedimento e cirurgia por mês</div><div class="canwrap" style="height:300px"><canvas id="agTipoChart"></canvas></div></div>
+    </div>
+    <div class="cgrid">
+      <div class="panel"><h3>Novos pacientes por mês</h3><div class="psub">Marcados como "primeiro atendimento"</div><div class="canwrap" style="height:260px"><canvas id="agPrimChart"></canvas></div></div>
+      <div class="panel"><h3>Procedimentos mais agendados</h3><div class="psub">Campo "Tipos" da agenda, todo o período</div><div class="canwrap" style="height:260px"><canvas id="agProcChart"></canvas></div></div>
+    </div>
+    <div class="tablecard">
+      <div class="tablehead"><h3>Mapa de calor — quando a clínica atende</h3><div class="psub">Atendimentos finalizados nos últimos 12 meses por dia da semana e hora</div></div>
+      <div class="tscroll"><table id="agHeat"></table></div>
+    </div>
+  </div>
+
+  <!-- ===================== PACIENTES ===================== -->
+  <div class="pane" id="pane-pacientes" hidden>
+    <div class="pagehead">
+      <div>
+        <div class="eyebrow">Operação clínica · cadastro único</div>
+        <div class="pagetitle">Pacientes — base, origem e valor</div>
+        <div class="pagesub">Fonte: Gestão DS · 2.191 cadastros · sem nomes nem documentos neste painel</div>
+      </div>
+      <span class="statuschip real"><span class="sdot"></span>Dado real · agregado sem PII</span>
+    </div>
+    <div class="kgrid four" id="pac-kpi"></div>
+    <div class="cgrid">
+      <div class="panel"><h3>De onde vêm os pacientes</h3><div class="psub">Campo "Indicação" normalizado · só cadastros de 2023 em diante (2022 é carga inicial)</div><div class="canwrap" style="height:300px"><canvas id="pacOrigemChart"></canvas></div></div>
+      <div class="panel"><h3>Novos cadastros por mês</h3><div class="psub">2023–2026</div><div class="canwrap" style="height:300px"><canvas id="pacNovosChart"></canvas></div></div>
+    </div>
+    <div class="cgrid">
+      <div class="panel"><h3>Quando foi a última visita</h3><div class="psub">Pela data do último atendimento no prontuário</div><div class="canwrap" style="height:260px"><canvas id="pacRecChart"></canvas></div></div>
+      <div class="panel"><h3>Valor do paciente (receita acumulada)</h3><div class="psub">Pacientes com receita paga, por faixa de gasto total</div><div class="canwrap" style="height:260px"><canvas id="pacLtvChart"></canvas></div></div>
+    </div>
+    <div class="cgrid" style="grid-template-columns:1fr 1fr 1fr">
+      <div class="panel"><h3>Cidade</h3><div class="psub">Top 12</div><div class="canwrap" style="height:280px"><canvas id="pacCidadeChart"></canvas></div></div>
+      <div class="panel"><h3>Faixa etária</h3><div class="psub" id="pacIdadeSub">Pacientes com nascimento válido</div><div class="canwrap" style="height:280px"><canvas id="pacIdadeChart"></canvas></div></div>
+      <div class="panel"><h3>Recorrência</h3><div class="psub">Atendimentos por paciente (todo o prontuário)</div><div class="canwrap" style="height:280px"><canvas id="pacRecorChart"></canvas></div></div>
+    </div>
+  </div>
+
+  <!-- ===================== PRONTUÁRIO (migrável) ===================== -->
+  <div class="pane" id="pane-prontuario" hidden>
+    <div class="pagehead">
+      <div>
+        <div class="eyebrow">Clínico · módulo 03 do plano</div>
+        <div class="pagetitle">Prontuário — o que já dá pra migrar</div>
+        <div class="pagesub">Fonte: Gestão DS · 8.920 atendimentos · nenhum texto clínico é exibido aqui</div>
+      </div>
+      <span class="statuschip proto"><span class="sdot"></span>Dado migrável pronto · módulo não construído</span>
+    </div>
+    <div class="protobanner">
+      <b>O histórico existe e está limpo; o módulo de prontuário ainda não.</b> O backup traz o texto de cada atendimento (em HTML e em texto limpo) e a lista de anexos. Falta construir a tela, o controle de acesso por perfil e o consentimento LGPD — o schema e as regras de acesso estão em <b>sistema/db</b>.
+    </div>
+    <div class="kgrid four" id="pr-kpi"></div>
+    <div class="cgrid">
+      <div class="panel"><h3>Atendimentos por mês</h3><div class="psub">Consulta, procedimento e cirurgia (a partir de 2023)</div><div class="canwrap" style="height:300px"><canvas id="prMesChart"></canvas></div></div>
+      <div class="panel"><h3>Cirurgias e procedimentos por ano</h3><div class="psub">Do prontuário</div><div class="canwrap" style="height:300px"><canvas id="prAnoChart"></canvas></div></div>
+    </div>
+    <div class="cgrid">
+      <div class="panel"><h3>Cirurgias mais realizadas</h3><div class="psub">Top 12, todo o histórico</div><div class="canwrap" style="height:320px"><canvas id="prCirChart"></canvas></div></div>
+      <div class="panel"><h3>Procedimentos mais realizados</h3><div class="psub">Top 15, todo o histórico</div><div class="canwrap" style="height:320px"><canvas id="prProcChart"></canvas></div></div>
+    </div>
+    <div class="tablecard">
+      <div class="tablehead"><h3>O que vem do Gestão DS e o que falta construir</h3><div class="psub">Checklist de migração do prontuário</div></div>
+      <div class="tscroll"><table id="prChecklist" style="min-width:560px"></table></div>
+    </div>
+  </div>
+
+<!--@@PANES_COMERCIAL_FIN-->
+  <!-- ===================== ORÇAMENTOS ===================== -->
+  <div class="pane" id="pane-orc" hidden>
+    <div class="pagehead">
+      <div>
+        <div class="eyebrow">Comercial · pós-consulta</div>
+        <div class="pagetitle">Orçamentos — o que fecha, o que dorme</div>
+        <div class="pagesub">Fonte: Gestão DS · 965 orçamentos de out/2022 a out/2026 · 525 pacientes</div>
+      </div>
+      <span class="statuschip real"><span class="sdot"></span>Dado real · foto de 05/10/2026</span>
+    </div>
+    <div class="protobanner" id="orc-aviso"></div>
+    <div class="kgrid four" id="orc-kpi"></div>
+    <div class="cgrid">
+      <div class="panel"><h3>Orçamentos emitidos por mês e como terminaram</h3><div class="psub">Situação hoje de cada orçamento, agrupado pelo mês de emissão</div><div class="canwrap" style="height:320px"><canvas id="orcCoorteChart"></canvas></div></div>
+      <div class="panel"><h3>Em aberto: há quanto tempo estão parados</h3><div class="psub">Valor líquido por idade do orçamento</div><div class="canwrap" style="height:320px"><canvas id="orcAgingChart"></canvas></div></div>
+    </div>
+    <div class="tablecard">
+      <div class="tablehead"><h3>Por quem orçou</h3><div class="psub">Taxa de ganho = ganhos ÷ orçamentos emitidos. Em aberto inclui histórico antigo</div></div>
+      <div class="tscroll"><table id="orcVend"></table></div>
+    </div>
+    <div class="cgrid">
+      <div class="panel"><h3>Tamanho dos fechamentos</h3><div class="psub">Orçamentos ganhos por faixa de valor líquido</div><div class="canwrap" style="height:260px"><canvas id="orcFaixaChart"></canvas></div></div>
+      <div class="panel"><h3>Orçamentos em aberto por temperatura</h3><div class="psub">Situação marcada pela equipe</div><div class="canwrap" style="height:260px"><canvas id="orcTempChart"></canvas></div></div>
+    </div>
+  </div>
+
+  <!-- ===================== CAIXA & RECEBÍVEIS ===================== -->
+  <div class="pane" id="pane-caixa" hidden>
+    <div class="pagehead">
+      <div>
+        <div class="eyebrow">Financeiro · módulo 04 do plano</div>
+        <div class="pagetitle">Caixa &amp; recebíveis</div>
+        <div class="pagesub">Fonte: Gestão DS · 2.892 lançamentos · receita recebida (valor líquido de taxa de cartão)</div>
+      </div>
+      <span class="statuschip real"><span class="sdot"></span>Receita completa · despesa só até set/2025</span>
+    </div>
+    <div class="protobanner" id="cx-aviso"></div>
+    <div class="kgrid four" id="cx-kpi"></div>
+    <div class="cgrid">
+      <div class="panel"><h3>Receita recebida × lançada por mês</h3><div class="psub">Recebido = pago, por data do pagamento · Lançado = valor bruto, por data do lançamento</div><div class="canwrap" style="height:320px"><canvas id="cxMesChart"></canvas></div></div>
+      <div class="panel"><h3>Como o paciente paga</h3><div class="psub">Receita recebida por forma de pagamento (todo o período)</div><div class="canwrap" style="height:320px"><canvas id="cxFormaChart"></canvas></div></div>
+    </div>
+    <div class="cgrid">
+      <div class="panel"><h3>De onde vem a receita</h3><div class="psub">Categoria do lançamento</div><div class="canwrap" style="height:280px"><canvas id="cxCatChart"></canvas></div></div>
+      <div class="panel"><h3>A receber atrasado</h3><div class="psub">Receitas vencidas e não pagas, por idade</div><div class="canwrap" style="height:280px"><canvas id="cxAgingChart"></canvas></div></div>
+    </div>
+    <div class="tablecard">
+      <div class="tablehead"><h3>Resultado gerencial, janeiro a setembro de cada ano</h3><div class="psub">Única janela com receita e despesa completas no Gestão DS · "pessoal" e "lucros" mudaram de lançamento em 2025: compare a soma, não as linhas</div></div>
+      <div class="tscroll"><table id="cxJanSet"></table></div>
+    </div>
+    <div class="cgrid">
+      <div class="panel"><h3>Maiores despesas (até set/2025)</h3><div class="psub">Pago, todo o período lançado</div><div class="canwrap" style="height:340px"><canvas id="cxDespChart"></canvas></div></div>
+      <div class="panel"><h3>Caixa "Condomínio Mon'Clinique"</h3><div class="psub">Base do futuro módulo de rateio · receita de aluguel × despesa do prédio</div><div id="cxCondo" style="font-size:12.5px;line-height:1.7"></div></div>
+    </div>
+  </div>
+
+  <!-- ===================== QUALIDADE ===================== -->
+  <div class="pane" id="pane-qual" hidden>
+    <div class="pagehead">
+      <div>
+        <div class="eyebrow">Gestão do projeto · antes de migrar</div>
+        <div class="pagetitle">Qualidade dos dados do backup</div>
+        <div class="pagesub">Cada item é um problema real encontrado — e o que fazer com ele</div>
+      </div>
+      <span class="statuschip proto"><span class="sdot"></span>Limpar antes de subir pro sistema novo</span>
+    </div>
+    <div class="kgrid" id="qual-kpi"></div>
+    <div id="qual-lista"></div>
+  </div>
+
+  <!-- ===================== SISTEMA PRÓPRIO ===================== -->
+  <div class="pane" id="pane-migr" hidden>
+    <div class="pagehead">
+      <div>
+        <div class="eyebrow">Arquitetura · migração</div>
+        <div class="pagetitle">Do Gestão DS para o sistema próprio</div>
+        <div class="pagesub">Vercel (site) + Supabase (banco, login, arquivos) + Git — contas sendo criadas pelo cliente</div>
+      </div>
+      <span class="statuschip proto"><span class="sdot"></span>Preparado localmente · nada aplicado em produção</span>
+    </div>
+    <div class="docflow">
+      <div class="docstep"><h5>1 · Backup Gestão DS</h5><p>18 CSVs de 05/10/26 baixados offline</p></div>
+      <div class="docarrow">→</div>
+      <div class="docstep"><h5>2 · ETL (Python)</h5><p>Limpa, normaliza, corrige datas e gera tabelas e agregados</p></div>
+      <div class="docarrow">→</div>
+      <div class="docstep"><h5>3 · Banco Supabase</h5><p>Postgres com RLS por perfil, auditoria e anexos privados</p></div>
+      <div class="docarrow">→</div>
+      <div class="docstep hl"><h5>4 · Site na Vercel</h5><p>Login por papel; secretária não vê financeiro nem prontuário</p></div>
+      <div class="docarrow">→</div>
+      <div class="docstep"><h5>5 · Desligar Gestão DS</h5><p>Só depois de baixar os anexos e conferir contagens</p></div>
+    </div>
+    <div class="tablecard">
+      <div class="tablehead"><h3>Quem vê o quê (proposta, a confirmar com a Luciana)</h3><div class="psub">No Cowork não dá pra separar acesso dentro de um login — no sistema próprio dá</div></div>
+      <div class="tscroll"><table style="min-width:640px">
+        <thead><tr><th style="text-align:left">Módulo</th><th>Admin<br>(Luciana / Dr. Fabrício)</th><th>Médico</th><th>Comercial</th><th>Recepção</th><th>Financeiro</th></tr></thead>
+        <tbody>
+          <tr><td>Agenda</td><td class="pos">✔</td><td class="pos">✔</td><td class="pos">✔</td><td class="pos">✔</td><td class="mut">—</td></tr>
+          <tr><td>Cadastro do paciente (contato)</td><td class="pos">✔</td><td class="pos">✔</td><td class="pos">✔</td><td class="pos">✔</td><td class="mut">—</td></tr>
+          <tr><td>CPF / RG completos</td><td class="pos">✔</td><td class="pos">✔</td><td class="mut">mascarado</td><td class="mut">mascarado</td><td class="mut">—</td></tr>
+          <tr><td>Prontuário e evolução clínica</td><td class="pos">✔</td><td class="pos">✔</td><td class="neg">✘</td><td class="neg">✘</td><td class="neg">✘</td></tr>
+          <tr><td>Orçamentos e funil</td><td class="pos">✔</td><td class="pos">✔</td><td class="pos">✔</td><td class="mut">só leitura</td><td class="mut">só leitura</td></tr>
+          <tr><td>Financeiro (caixa, recebíveis, DRE)</td><td class="pos">✔</td><td class="neg">✘</td><td class="neg">✘</td><td class="neg">✘</td><td class="pos">✔</td></tr>
+          <tr><td>Auditoria (quem viu o quê)</td><td class="pos">✔</td><td class="neg">✘</td><td class="neg">✘</td><td class="neg">✘</td><td class="neg">✘</td></tr>
+        </tbody>
+      </table></div>
+    </div>
+    <div class="scopebox">
+      <h3>Pacote entregue na pasta <code>sistema/</code></h3>
+      <div class="scoperow"><div><div class="sname">etl/build_dataset.py</div><div class="sdesc">Pipeline reprodutível: lê os 18 CSVs, normaliza origem/cidade/datas, gera agregados (este painel) e tabelas limpas para carga.</div></div><span class="statuspill ok">Pronto</span></div>
+      <div class="scoperow"><div><div class="sname">db/ — schema, RLS, views, carga</div><div class="sdesc">SQL do Supabase: 17 tabelas, RLS por papel, auditoria append-only, views sem PII e carga com 67 conferências (testado em Postgres 18 local, não em Supabase real).</div></div><span class="statuspill ok" id="migr-db">Pronto</span></div>
+      <div class="scoperow"><div><div class="sname">Painel-Operacional-LOCAL.html</div><div class="sdesc">Mesa de trabalho da recepção/comercial com nomes e telefones; carrega os CSVs no navegador e não publica nada.</div></div><span class="statuspill ok" id="migr-local">Pronto</span></div>
+      <div class="scoperow"><div><div class="sname">docs/ — setup, LGPD, dicionário de dados</div><div class="sdesc">Passo a passo Vercel + Supabase + Git, checklist de segurança, retenção de prontuário (20 anos) e dicionário.</div></div><span class="statuspill ok" id="migr-docs">Pronto</span></div>
+      <div class="scoperow"><div><div class="sname">Contas Vercel, Git e Supabase</div><div class="sdesc">Cliente criando. Quando existirem: aplicar db/001–004, criar bucket privado, usuários e deploy.</div></div><span class="statuspill pend">Aguardando cliente</span></div>
+      <div class="scoperow"><div><div class="sname">Anexos (PDFs, exames, fotos)</div><div class="sdesc">8.529 arquivos aparecem só como link temporário no backup. Precisam ser baixados do Gestão DS antes do desligamento.</div></div><span class="statuspill off">Pendente</span></div>
+      <div class="scoperow"><div><div class="sname">Consentimentos LGPD e assinatura digital</div><div class="sdesc">O backup não traz nenhum termo assinado (tabela vazia). Precisam nascer no sistema novo (ClickSign recomendado).</div></div><span class="statuspill off">Não existe</span></div>
+    </div>
+  </div>
+
+  <!-- ===================== ÍNDICE DE LINKS ===================== -->
+  <div class="pane" id="pane-links" hidden>
+    <div class="pagehead">
+      <div>
+        <div class="eyebrow">Navegação</div>
+        <div class="pagetitle">Índice de links</div>
+        <div class="pagesub">Todo KPI, gráfico e tabela tem um endereço próprio. Use "copiar" para enviar o atalho direto.</div>
+      </div>
+      <button class="themebtn" style="width:auto;margin:0" type="button" onclick="copiarIndiceMarkdown()">Copiar tudo em Markdown</button>
+    </div>
+    <div class="protobanner">
+      <b>Como funcionam os links.</b> O endereço termina em <code>#aba</code> (abre a aba), <code>#aba/k/item</code> (abre o detalhe do KPI) ou <code>#aba/g/item</code> (leva ao gráfico). Funcionam com o arquivo <b>MVP-Consolidado-Mon-Clinique-v2.html</b> na mesma pasta do computador. Ao clicar num KPI, o endereço do navegador já muda e pode ser copiado de lá.
+    </div>
+    <p style="margin-bottom:12px"><input id="linksBusca" type="search" placeholder="Buscar item, aba ou tipo…" aria-label="Buscar item" style="width:100%;max-width:420px;padding:10px 14px;border-radius:10px;border:1px solid var(--linha);background:var(--card);color:var(--ink);font:inherit" oninput="renderLinks()"></p>
+    <div class="psub" id="linksResumo" style="margin-bottom:8px"></div>
+    <div class="tablecard"><div class="tscroll"><table id="linksTabela" style="min-width:640px"></table></div></div>
+  </div>
+
+<!--@@DIV-->
+  <!-- ===================== DIVERGÊNCIA ===================== -->
+  <div class="pane" id="pane-div" hidden>
+    <div class="pagehead">
+      <div>
+        <div class="eyebrow">Achado crítico · agora com a terceira fonte</div>
+        <div class="pagetitle">O Conta Azul está incompleto — o Gestão DS confirma a contabilidade</div>
+      </div>
+      <span class="statuschip proto"><span class="sdot"></span>Forte evidência · confirmar com a contabilidade</span>
+    </div>
+    <div class="divbox" id="div-box"></div>
+    <div class="kgrid four" id="div-kpi"></div>
+    <div class="cgrid" style="grid-template-columns:1.4fr 1fr">
+      <div class="panel"><h3>Receita mês a mês — quatro medidas</h3><div class="psub">Jul/25 a Jun/26</div><div class="canwrap" style="height:320px"><canvas id="divChart"></canvas></div></div>
+      <div class="panel"><h3>Quanto cada fonte captura</h3><div class="psub">Out/25–Jun/26, tendo a contabilidade como 100%</div><div class="canwrap" style="height:320px"><canvas id="divPctChart"></canvas></div></div>
+    </div>
+    <div class="tablecard">
+      <div class="tablehead"><h3>Tabela de conferência</h3><div class="psub">Valores em R$ · "—" = Conta Azul não exportado para o mês</div></div>
+      <div class="tscroll"><table id="divTable"></table></div>
+    </div>
+    <div class="scopebox">
+      <h3>Como ler isto (e o que ainda não prova)</h3>
+      <div class="scoperow"><div><div class="sname">O que a evidência sustenta</div><div class="sdesc">Duas fontes independentes (contabilidade e Gestão DS) chegam a ~R$1,9–2,0 milhões em 9 meses. O Conta Azul chega a R$1,04 milhão. Quem destoa é o Conta Azul.</div></div><span class="statuspill ok">Sustentado</span></div>
+      <div class="scoperow"><div><div class="sname">O que não prova</div><div class="sdesc">Contabilidade mede faturamento (notas), Gestão DS mede dinheiro recebido: mês a mês divergem por prazo (cartão, parcelamento, nota emitida antes/depois do recebimento). Só o total de períodos longos é comparável.</div></div><span class="statuspill pend">Ressalva</span></div>
+      <div class="scoperow"><div><div class="sname">Próximo passo</div><div class="sdesc">Reexportar o Conta Azul com todas as contas (inclusive Pix e maquininha) e pedir à Ativa o faturamento por forma de recebimento. Só então travar a DRE oficial.</div></div><span class="statuspill off">Pendente</span></div>
+    </div>
+  </div>
+
+<!--@@ROAD-->
+    <div class="scopebox">
+      <h3>Status real de cada item crítico (06/10)</h3>
+      <div class="scoperow"><div><div class="sname">Backup do Gestão DS</div><div class="sdesc">18 tabelas baixadas e tratadas offline: pacientes, agenda, prontuário, orçamentos, financeiro e catálogo de preços.</div></div><span class="statuspill ok">Concluído</span></div>
+      <div class="scoperow"><div><div class="sname">Agenda, Pacientes, Orçamentos, Caixa</div><div class="sdesc">Painéis com dado real do backup (foto de 05/10). Ao vivo só quando o sistema próprio entrar.</div></div><span class="statuspill ok">Construído</span></div>
+      <div class="scoperow"><div><div class="sname">Banco e acesso por perfil (Supabase)</div><div class="sdesc">Schema, RLS, views e carga prontos localmente. Falta o cliente criar as contas para aplicar.</div></div><span class="statuspill pend">Pronto p/ aplicar</span></div>
+      <div class="scoperow"><div><div class="sname">Painel operacional com nomes (local)</div><div class="sdesc">Agenda do dia, follow-up de orçamentos, reativação, cobrança e qualidade de cadastro — offline.</div></div><span class="statuspill ok">Construído</span></div>
+      <div class="scoperow"><div><div class="sname">Divergência de receita</div><div class="sdesc">Gestão DS (R$1,91 mi) confirma a contabilidade (R$1,98 mi); Conta Azul (R$1,04 mi) está incompleto. Falta reexportar e confirmar com a Ativa.</div></div><span class="statuspill pend">Quase resolvido</span></div>
+      <div class="scoperow"><div><div class="sname">Prontuário eletrônico</div><div class="sdesc">Histórico (8.920 atendimentos) pronto pra migrar; tela, perfis e consentimento ainda não construídos.</div></div><span class="statuspill off">Não construído</span></div>
+      <div class="scoperow"><div><div class="sname">Anexos e assinaturas</div><div class="sdesc">8.529 arquivos só como link temporário; nenhum termo assinado no backup.</div></div><span class="statuspill off">Pendente</span></div>
+      <div class="scoperow"><div><div class="sname">Assinatura eletrônica</div><div class="sdesc">ClickSign recomendado (a partir de R$39/mês, sem exposição cambial). Decisão formal ainda não fechada.</div></div><span class="statuspill pend">Pesquisa pronta</span></div>
+      <div class="scoperow"><div><div class="sname">Plaud → Claude (leitura de consulta)</div><div class="sdesc">Leitura via MCP já funciona; arquivar no prontuário depende do módulo existir.</div></div><span class="statuspill ok">Provado</span></div>
+      <div class="scoperow"><div><div class="sname">Marketing (Meta Ads)</div><div class="sdesc">Dado real, mas parado desde 16/jul. Acompanhamento interno também parou.</div></div><span class="statuspill pend">Desatualizado</span></div>
+      <div class="scoperow"><div><div class="sname">Rateio "condomínio"</div><div class="sdesc">Caixa do condomínio já existe nos dados (R$96 mil de despesa × R$11 mil de aluguel) — base pro módulo P2.</div></div><span class="statuspill info">P2 · dado mapeado</span></div>
+      <div class="scoperow"><div><div class="sname">Funis Vendas e Pós-vendas (CRM)</div><div class="sdesc">Existem no Black CRM mas não estão trazidos pra nenhum painel ainda.</div></div><span class="statuspill off">Não construído</span></div>
+    </div>
