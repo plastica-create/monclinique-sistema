@@ -15,6 +15,8 @@ Preparado em 06/10/2026 a partir do backup do Gestão DS de 05/10/2026 (pasta `.
 | `Painel-Operacional-LOCAL.html` | Mesa de trabalho com nomes e telefones; carrega os CSVs no navegador, offline | só em memória, na sua máquina |
 | `db/` | SQL do Supabase: schema, RLS por perfil, views, carga | não |
 | `docs/` | Setup Vercel + Supabase + Git, LGPD, dicionário de dados | não |
+| `app/` | Sistema web (Next.js + Supabase). Como rodar e publicar: `app/README.md` | não |
+| `db/005_app.sql`, `db/tests/` | Funções do app; teste automático da RLS com dados fictícios | não |
 
 ## Atualizar tudo quando chegar um novo backup
 

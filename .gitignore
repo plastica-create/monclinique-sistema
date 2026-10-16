@@ -106,3 +106,7 @@ desktop.ini
 .vscode/*
 !.vscode/extensions.json
 *.log
+
+# --- Testes do app ---
+test-results/
+playwright-report/

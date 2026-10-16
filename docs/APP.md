@@ -1,63 +1,63 @@
-# Aplicativo web (sistema/app) — arquitetura, decisões e limitações
+# Aplicativo web (app/): arquitetura, decisões e limitações
 
-Next.js 15 (App Router) + TypeScript + `@supabase/ssr`. CSS próprio. Gráficos em SVG/HTML feitos à mão. Instruções de uso: `sistema/app/README.md`.
+Next.js 16 (App Router) + React 19 + TypeScript estrito + `@supabase/ssr`. CSS próprio, gráficos em SVG feitos à mão, sem biblioteca de UI e sem fonte baixada de terceiros. Como rodar e publicar: `app/README.md`.
 
 ## Princípios
 
-1. **A segurança é do banco.** O front só esconde menu e valida formulário. Toda leitura/escrita usa o cliente Supabase **do usuário logado** (chave anon + JWT): a RLS de `002_rls.sql` decide. Não existe `service_role` no app.
-2. **Tudo no servidor.** Não há cliente Supabase no navegador. Os cookies de sessão são `httpOnly`; o JavaScript da página nunca vê o token. Páginas e Server Actions falam com o banco.
-3. **Sem dado pessoal em URL, log ou query string.** A busca de paciente é Server Action (POST). Filtros em URL só têm categorias (status, faixa, datas). Erros do banco viram mensagem genérica em português e o log só leva o código (`lib/erros.ts`).
-4. **Texto clínico só por RPC auditada.** Em `atendimentos` o app nunca usa `select('*')`: lê colunas de metadado; o texto vem de `ler_atendimento` (grava auditoria). Abrir a lista do prontuário chama `registrar_leitura_prontuario`. Links de prontuário têm `prefetch={false}` para não gerar leitura espúria.
+1. **A segurança é do banco.** O app só esconde menu e valida formulário. Toda leitura e escrita usa o cliente Supabase do usuário logado (chave anon + JWT dele), e a RLS de `db/002_rls.sql` decide. Não existe `service_role` no app.
+2. **Tudo no servidor.** Não há cliente Supabase no navegador. Os cookies de sessão são `httpOnly` e o JavaScript da página nunca vê o token. Páginas (Server Components) e Server Actions falam com o banco.
+3. **Sem dado pessoal em URL, log ou query string.** A busca de paciente é Server Action (POST). Filtros em URL só levam categorias e datas. Erros do banco viram mensagem genérica em português e o log leva só o código (`src/lib/erros.ts`).
+4. **Texto clínico só por RPC auditada.** O app nunca lê `atendimentos.texto` por SELECT: o prontuário vem de `ler_prontuario`, que grava a leitura na auditoria. Links para telas sensíveis usam `prefetch={false}` para não gerar leitura espúria.
+5. **Painel só com agregados.** O Início lê apenas as views `vw_*` (`src/lib/data/painel.ts`).
 
 ## Pastas
 
 ```
-sistema/app
-  src/middleware.ts          CSP com nonce, renova sessão, protege rotas
-  src/app/(auth)/            login, recuperar/redefinir senha, /mfa
-  src/app/(app)/             módulos (menu por papel): inicio, agenda, pacientes, orcamentos,
-                             financeiro(+conciliacao), prontuario, leads, qualidade, admin, seguranca
+app/
+  src/proxy.ts               (o antigo middleware) CSP com nonce, renova a sessão, protege rotas
+  src/app/(auth)/            login, recuperar e redefinir senha, /mfa
+  src/app/(app)/             módulos por papel: inicio, pacientes, agenda, orcamentos, financeiro
+                             (mês, vencidos, conciliação), prontuario, leads, admin (equipe,
+                             médicos, auditoria), seguranca (MFA do próprio usuário)
   src/app/auth/callback      troca do código PKCE do e-mail de recuperação
-  src/actions/               Server Actions (auth, pacientes, agenda, orcamentos, financeiro,
-                             prontuario[anexos/consentimentos], leads, admin)
-  src/lib/database.types.ts  tipos do banco (à mão; ver README para regenerar)
-  src/lib/data/types.ts      interface Repo (toda a camada de acesso a dados)
-  src/lib/data/supabase-repo.ts   implementação real (consultas tipadas, uma função por operação)
-  src/lib/data/demo-repo.ts  implementação em memória (modo demo), simula a RLS por papel
-  src/lib/demo/              semente 100% sintética
+  src/actions/               Server Actions: auth, pacientes, agenda, orcamentos, financeiro,
+                             prontuario (evolução, anexos, consentimentos), leads, admin
+  src/lib/sessao.ts          estado da sessão (login, MFA, perfil, papel) e exigirSessao()
   src/lib/roles.ts           papéis, menu e capacidades (espelha a matriz da RLS)
   src/lib/schemas.ts         validação zod de todos os formulários
-  src/lib/{text,datas,aging,busca,duplicados,csv,financeiro,consentimentos,kpis}.ts   regras puras (testadas)
-  src/components/            UI (formulário com useActionState, gráficos SVG, tabelas)
-  sql/005_sugerido.sql       SUGESTÃO de migração (não aplicada)
+  src/lib/data/              consultas por módulo (uma função por operação)
+  src/lib/*.test.ts          testes unitários (Vitest)
+  src/components/            formulários (useActionState), tabelas, gráficos SVG
+  e2e/                       testes de navegador (Playwright) contra um Supabase de teste
+db/005_app.sql               funções e tabela que o app usa (aplicar depois de 001–003)
+db/tests/                    stub do Supabase, semente fictícia e teste de aceite da RLS
 ```
 
 ## Decisões que valem registrar
 
-- **Duas implementações de `Repo`** (Supabase e demo) atrás da mesma interface: o modo demo exercita a mesma UI e as mesmas regras sem banco. O demo imita a RLS (financeiro não vê agenda, médico só os seus etc.), mas **a prova real da RLS é o teste de aceite no Supabase**.
-- **Indicadores e gráficos do Início** vêm só das `vw_*` (agregados). Cada KPI/gráfico tem URL própria (`/inicio?kpi=<slug>`, `/inicio?grafico=<slug>`), botão “copiar link” e cartão clicável para a lista (`lib/kpis.ts` define slug, papéis, destino e explicação).
-- **MFA:** `sessao.ts` reconhece quatro estados além do normal: sem login, “precisa validar o 2º fator” (aal1 com fator cadastrado), “bloqueado pelo banco por falta de MFA” (perfil ativo mas `papel_atual()` nulo → cadastrar o fator em `/mfa`) e “sem perfil”. Cadastro/verificação por `supabase.auth.mfa.enroll / challengeAndVerify / unenroll`.
-- **CPF/RG:** mascarados (`•••.•••.•••-••`); “Revelar” é Server Action que grava a revelação em auditoria **antes** de devolver o valor (se a auditoria falhar, não mostra) e o valor some da tela em 30 s. O CPF nunca vai no HTML inicial. Recepção/comercial só gravam (RLS).
-- **Origem obrigatória** no cadastro (lista controlada `ORIGENS`), com aviso de possível duplicado (nome + nascimento/celular) e confirmação explícita.
-- **Agenda:** baixa exige desfecho (compareceu → `finalizado`, faltou → `faltou`, cancelou → `cancelado` + motivo); futuro só pode ser cancelado. Lista “sem baixa” com botões rápidos.
-- **Orçamentos:** perda exige motivo (lista + detalhe se “Outro”). “Marcar contato” acrescenta uma linha datada em `orcamentos.observacao` (não há coluna de contato). Itens recalculam bruto/líquido (duas escritas, não atômicas).
-- **Anexos:** o servidor valida e devolve URL **assinada de upload**; o navegador envia direto ao Storage (evita o limite de corpo da Vercel) e o servidor registra os metadados depois de conferir que o objeto existe. Abertura por URL assinada de 60 s; anexo `clinico` aberto por admin/médico entra na auditoria.
-- **Importação de leads:** CSV colado ou lido no navegador; “Pré-visualizar” não grava; ID externo faz upsert; sem integração com o Black CRM.
-- **Conciliação contábil:** precisa da tabela `conciliacao_mensal` (em `sql/005_sugerido.sql`). Sem ela a tela mostra aviso e só compara com o sistema.
-- **Segurança HTTP:** CSP com nonce por requisição (`script-src 'self' 'nonce-…' 'strict-dynamic'`, sem `unsafe-inline` em scripts; `style-src` mantém `unsafe-inline` por causa dos atributos `style` do React/SVG), HSTS, `X-Frame-Options: DENY` e `frame-ancestors 'none'`, Referrer-Policy, Permissions-Policy, `nosniff`, `noindex`. Todas as páginas são dinâmicas (`force-dynamic`) para o nonce funcionar.
-- **Fontes:** pilha `Inter, Poppins, system-ui…` **sem baixar fontes** (nenhuma requisição a terceiros). Se a clínica instalar as fontes no aparelho, elas aparecem; senão cai para a fonte do sistema.
-- **Rate limit de login:** simples, em memória, por instância (5 falhas / 15 min por IP+e-mail). Em serverless é parcial; a defesa real é a do Supabase Auth.
+- **Next 16:** `proxy.ts` no lugar de `middleware.ts`; `params`, `searchParams` e `cookies()` assíncronos; `typedRoutes` ligado; o layout raiz chama `connection()` para que tudo seja dinâmico e o nonce do CSP mude a cada requisição.
+- **MFA:** `sessao.ts` distingue sem login, "precisa validar o 2º fator" (sessão aal1 com fator TOTP verificado), "bloqueado pelo banco por falta de MFA" (perfil ativo mas `papel_atual()` nulo, então cadastrar o fator em `/mfa`), "sem perfil" e normal. O nível vem do claim `aal` do JWT. O admin só liga a exigência de MFA para alguém estando ele mesmo em aal2.
+- **CPF/RG:** ficam em `pacientes_documentos` e aparecem mascarados. "Revelar" chama `revelar_documento` (005), que grava a leitura na auditoria **antes** de devolver o valor; o valor some da tela em 30 s e nunca vai no HTML inicial. Recepção e comercial só gravam.
+- **Cadastro de paciente:** origem obrigatória (lista `ORIGENS`), aviso de possível duplicado por `possiveis_duplicados` (nome + nascimento ou celular) com confirmação explícita. Busca por `buscar_pacientes` (nome sem acento ou dígitos do telefone), que respeita a RLS de quem busca.
+- **Agenda:** aviso de conflito de horário do mesmo médico; baixa exige desfecho (compareceu, faltou, cancelou + motivo); agendamento futuro só pode ser confirmado ou cancelado.
+- **Orçamentos:** perda exige motivo; "registrar contato" acrescenta linha datada na observação; itens recalculam bruto e líquido (duas escritas, não atômicas).
+- **Financeiro:** lançamentos, baixa de pagamento, vencidos com mensagem de cobrança copiável (a cópia é registrada com `registrar_exportacao`) e conciliação mensal contra contabilidade e Conta Azul (tabela `conciliacao_mensal`, em 005).
+- **Anexos:** o servidor valida e devolve URL assinada de upload; o navegador envia direto ao Storage (evita o limite de corpo da Vercel) e o servidor registra os metadados. Abertura por URL assinada de 60 s; anexo clínico entra na auditoria antes de abrir.
+- **Leads:** CSV colado ou lido no navegador; "Pré-visualizar" não grava; o ID externo faz upsert. Sem integração automática com o Black CRM.
+- **Segurança HTTP:** CSP com nonce (`script-src 'self' 'nonce-…' 'strict-dynamic'`), HSTS, `X-Frame-Options: DENY` e `frame-ancestors 'none'`, Referrer-Policy, Permissions-Policy, `nosniff`, `noindex`, COOP e `Cache-Control: private, no-store` nas páginas.
+- **Rate limit de login:** em memória, por instância (5 falhas em 15 min por IP + e-mail). Em serverless é parcial; a defesa principal é a do Supabase Auth.
 
-## Limitações e pendências (honestas)
+## Como foi verificado
 
-- **Nada foi testado contra um Supabase real** (nem RLS, nem MFA, nem Storage, nem as RPC). Foi verificado em modo demo, com `tsc`, lint, build e testes unitários. As consultas foram escritas a partir do SQL, mas só um teste de aceite com usuários reais confirma.
-- Busca de paciente: o servidor baixa nome/telefone dos pacientes visíveis e filtra em Node (sem acento). Serve para ~2 mil cadastros; para crescer, aplicar `buscar_pacientes` (em `sql/005_sugerido.sql`) e trocar `buscarPacientes` no repo.
-- “Revelar CPF/RG” é auditado por `registrar_exportacao` (ação `exportacao`, sem `paciente_id`; o id vai no texto da finalidade). A função própria está em `sql/005_sugerido.sql`.
-- Usuários: o app lista perfis (nome/papel/ativo), mas **não mostra e-mail** (a tabela `auth.users` não é exposta) e **não cria usuários** (criar no painel do Supabase + inserir em `perfis`). Não sabe quem já cadastrou MFA (também fora da API).
-- Agenda: sem checagem de conflito de horário; edição por formulário (sem arrastar e soltar); “excluir” agendamento não existe (cancelar é o caminho).
-- Prontuário: editor de texto puro com salvamento manual/Ctrl+S (sem autosave); ao salvar, `texto_html` legado vai a `null` (a versão anterior fica na auditoria). Não renderiza HTML legado (converte para texto).
-- Auditoria na tela: sem o conteúdo antes/depois, de propósito (pode ter dado pessoal).
-- Financeiro: formas de pagamento/taxas são agregadas no servidor sobre os últimos 12 meses (até 10 mil linhas); “cobrança” = copiar mensagem (não envia WhatsApp nem registra a tentativa).
-- Recuperação de senha depende do SMTP e das Redirect URLs configuradas no Supabase.
-- Acessibilidade verificada por inspeção de DOM (rótulos, foco, tabelas com legenda, tabela oculta nos gráficos), não por leitor de tela.
-- Sem testes automatizados de interface (E2E); a verificação de telas foi manual no navegador embutido.
+- `db/tests/rodar.sh` aplica 001–003 e 005 duas vezes (idempotência) num Postgres 16 com um stub do Supabase, carrega dados **fictícios** e roda 48 checagens da RLS por papel, incluindo usuário sem perfil e MFA aal1 x aal2. Roda no CI a cada PR.
+- Os 17 testes `e2e/` rodaram contra um Supabase local (Postgres 16 + GoTrue + PostgREST reais) com um usuário de cada papel: cabeçalhos de segurança, login, menus por papel, cadastro e busca de paciente, agenda e baixa, CPF revelado com auditoria, limites do médico, orçamento, financeiro e conciliação, importação de leads, cadastro e desafio de MFA.
+- CI: tipos (`tsc` com rotas tipadas), lint, testes unitários e build.
+
+## Limitações e pendências
+
+- **Storage não foi testado** (envio e abertura de anexos): o ambiente local não tinha o serviço de Storage. Testar no staging antes de usar.
+- **Recuperação de senha por e-mail não foi testada:** depende do SMTP e das Redirect URLs configuradas no Supabase.
+- O app não cria usuários nem mostra e-mails (`auth.users` não é exposta): criar no painel do Supabase e depois definir o perfil em Admin › Equipe.
+- Prontuário: editor de texto simples com salvamento manual; ao editar, o `texto_html` legado vira `null` (a versão anterior fica na auditoria). HTML legado é exibido convertido para texto.
+- Auditoria na tela mostra quem, quando e o quê, sem o conteúdo antes e depois (pode ter dado pessoal).
+- Acessibilidade verificada por inspeção (rótulos, foco, tabelas ocultas nos gráficos), não com leitor de tela.
